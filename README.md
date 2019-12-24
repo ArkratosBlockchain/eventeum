@@ -423,6 +423,8 @@ Eventeum can either be configured by:
 | RABBIT_EXCHANGE | ThisIsAExchange | property rabbitmq.exchange |
 | RABBIT_ROUTING_KEY | thisIsRoutingKey | property rabbitmq.routingKeyPrefix |
 | DATABASE_TYPE | MONGO | The database to use.  Either MONGO or SQL. |
+| SQS_ENDPOINTURL | | The sqs url for posting events |
+| SQS_AWS_REGION | | The aws region where the sqs is |
 
 ### INFURA Support Configuration
 Connecting to an INFURA node is only supported if connecting via websockets (`wss://<...>` node url).  The blockstrategy must also be set to PUBSUB.

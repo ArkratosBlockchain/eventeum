@@ -21,6 +21,7 @@ import net.consensys.eventeum.dto.message.EventeumMessage;
 import net.consensys.eventeum.integration.KafkaSettings;
 import net.consensys.eventeum.integration.PulsarSettings;
 import net.consensys.eventeum.integration.RabbitSettings;
+import net.consensys.eventeum.integration.SqsSettings;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
 import net.consensys.eventeum.integration.broadcast.blockchain.HttpBlockchainEventBroadcaster;
 import net.consensys.eventeum.integration.broadcast.blockchain.HttpBroadcasterSettings;
@@ -28,6 +29,7 @@ import net.consensys.eventeum.integration.broadcast.blockchain.KafkaBlockchainEv
 import net.consensys.eventeum.integration.broadcast.blockchain.OnlyOnceBlockchainEventBroadcasterWrapper;
 import net.consensys.eventeum.integration.broadcast.blockchain.PulsarBlockChainEventBroadcaster;
 import net.consensys.eventeum.integration.broadcast.blockchain.RabbitBlockChainEventBroadcaster;
+import net.consensys.eventeum.integration.broadcast.blockchain.SqsBlockchainEventBroadcaster;
 
 /**
  * Spring bean configuration for the BlockchainEventBroadcaster.
@@ -71,6 +73,16 @@ public class BlockchainEventBroadcasterConfiguration {
         return onlyOnceWrap(broadcaster);
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(name=BROADCASTER_PROPERTY, havingValue="SQS")
+    public BlockchainEventBroadcaster sqsBlockchainEventBroadcaster(SqsSettings settings) {
+        final BlockchainEventBroadcaster broadcaster =
+                new SqsBlockchainEventBroadcaster(settings, retryTemplate());
+
+        return onlyOnceWrap(broadcaster);
+    }
+    
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name=BROADCASTER_PROPERTY, havingValue="RABBIT")
