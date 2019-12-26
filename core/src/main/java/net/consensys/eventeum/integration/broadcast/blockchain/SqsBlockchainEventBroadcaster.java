@@ -50,13 +50,33 @@ public class SqsBlockchainEventBroadcaster implements BlockchainEventBroadcaster
     @Override
     public void broadcastNewBlock(BlockDetails block) {
 
-        final EventeumMessage<BlockDetails> message = createBlockEventMessage(block);
+        if (this.settings.isBlockMonitoringEnabled()) {
+            final EventeumMessage<BlockDetails> message = createBlockEventMessage(block);
+
+            retryTemplate.execute((context) -> {
+                SendMessageRequest send_msg_request = new SendMessageRequest()
+                    .withQueueUrl(this.settings.getBlockEndpointUrl())
+                    .withMessageGroupId("new_block")
+                    .withMessageDeduplicationId("new_block_" + block.getHash())
+                    .withMessageBody(JSON.stringify(message))
+                    ;
+                sqs.sendMessage(send_msg_request);
+
+                return null;
+            });
+        }
+    }
+
+    @Override
+    public void broadcastContractEvent(ContractEventDetails eventDetails) {
+
+        final EventeumMessage<ContractEventDetails> message = createContractEventMessage(eventDetails);
 
         retryTemplate.execute((context) -> {
             SendMessageRequest send_msg_request = new SendMessageRequest()
-                .withQueueUrl(this.settings.getEndpointUrl())
-                .withMessageGroupId("new_block")
-                .withMessageDeduplicationId("new_block_" + block.getHash())
+                .withQueueUrl(this.settings.getEventEndpointUrl())
+                .withMessageGroupId("new_event")
+                .withMessageDeduplicationId("new_event_" + eventDetails.getTransactionHash())
                 .withMessageBody(JSON.stringify(message))
                 ;
             sqs.sendMessage(send_msg_request);
@@ -66,22 +86,21 @@ public class SqsBlockchainEventBroadcaster implements BlockchainEventBroadcaster
     }
 
     @Override
-    public void broadcastContractEvent(ContractEventDetails eventDetails) {
-
-        System.out.println("broadcast contract event");
-
-        // retryTemplate.execute((context) -> {
-        //     final ResponseEntity<Void> response =
-        //             restTemplate.postForEntity(settings.getContractEventsUrl(), eventDetails, Void.class);
-
-        //     checkForSuccessResponse(response);
-        //     return null;
-        // });
-    }
-
-    @Override
     public void broadcastTransaction(TransactionDetails transactionDetails) {
 
+        final EventeumMessage<TransactionDetails> message = createTransactionEventMessage(transactionDetails);
+
+        retryTemplate.execute((context) -> {
+            SendMessageRequest send_msg_request = new SendMessageRequest()
+                .withQueueUrl(this.settings.getTxEndpointUrl())
+                .withMessageGroupId("new_tx")
+                .withMessageDeduplicationId("new_tx_" + transactionDetails.getHash())
+                .withMessageBody(JSON.stringify(message))
+                ;
+            sqs.sendMessage(send_msg_request);
+
+            return null;
+        });
     }
 
     protected EventeumMessage<BlockDetails> createBlockEventMessage(BlockDetails blockDetails) {

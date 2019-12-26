@@ -15,7 +15,11 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class SqsSettings {
 
-    private String endpointUrl;
+    private String blockEndpointUrl;
+    private String eventEndpointUrl;
+    private String txEndpointUrl;
 
     private String awsRegion;
+
+    private boolean blockMonitoringEnabled;
 }
